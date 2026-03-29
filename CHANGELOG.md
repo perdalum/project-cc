@@ -1,5 +1,22 @@
 # Changelog
 
+## Version 1.3.0 — Legacy Import
+
+### Utilities
+
+- Added `scripts/convert_project_control_center.py` to convert legacy `ProjectControlCenter.json` data into the JSON array format used by Project Command And Control
+- Converter maps legacy notes, touches, next dates, modified/created/review timestamps, and folder URLs into the current project schema
+- Fields not available in the legacy file are left empty in the converted output
+
+### Assets
+
+- Added a proper macOS `Assets.xcassets/AppIcon.appiconset`
+- App icon set can now be generated from a supplied `icon.png` source image and compiled into `AppIcon.icns`
+
+### Infrastructure
+
+- Regenerated the Xcode project so the asset catalog is included in app builds
+
 ## Version 1.2.0 — Visual Overview
 
 ### Overview View
