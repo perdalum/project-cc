@@ -1,0 +1,479 @@
+import SwiftUI
+
+// MARK: - State filter model
+
+enum StateFilter: Hashable {
+    case all
+    case group(String, [ProjectState])
+    case single(ProjectState)
+
+    var label: String {
+        switch self {
+        case .all:               return "All States"
+        case .group(let l, _):  return l
+        case .single(let s):    return s.rawValue
+        }
+    }
+
+    func matches(_ state: ProjectState) -> Bool {
+        switch self {
+        case .all:               return true
+        case .group(_, let ss): return ss.contains(state)
+        case .single(let s):    return state == s
+        }
+    }
+
+    static let groups: [StateFilter] = [
+        .group("Init",     [.new, .idea]),
+        .group("Not Done", [.idea, .new, .active, .delegated, .waiting]),
+        .group("Started",  [.active, .delegated, .waiting]),
+        .group("Done",     [.rejected, .done]),
+    ]
+}
+
+struct ProjectListView: View {
+    @EnvironmentObject var store: ProjectStore
+
+    @State private var filterText  = ""
+    @State private var filterState: StateFilter = .all
+    @State private var sortOrder = [KeyPathComparator(\Project.name)]
+    @State private var columnCustomization = TableColumnCustomization<Project>()
+    @Environment(\.openWindow) private var openWindow
+
+    // State-change flow (comment required for Delegated/Waiting)
+    @State private var pendingTarget:   Project?      = nil
+    @State private var pendingState:    ProjectState? = nil
+    @State private var pendingComment   = ""
+    @State private var showCommentAlert = false
+
+    // Inline Next editor
+    @State private var editingNextID:  Project.ID? = nil
+    @State private var draftNextDate:  Date        = Date()
+
+    // Inline Note editor
+    @State private var editingNoteID:  Project.ID? = nil
+    @State private var draftNoteText:  String      = ""
+
+    // Inline URL editor
+    @State private var editingURLID:   Project.ID? = nil
+    @State private var draftURL:       String      = ""
+
+    // MARK: Derived data
+
+    @State private var displayedProjects: [Project] = []
+
+    private func refreshDisplay() {
+        displayedProjects = store.projects
+            .filter { filterState.matches($0.state) }
+            .filter { filterText.trimmingCharacters(in: .whitespaces).isEmpty || nameMatches($0.name) }
+            .sorted(using: sortOrder)
+    }
+
+    // MARK: Body
+
+    var body: some View {
+        VStack(spacing: 0) {
+            filterBar
+            Divider()
+            projectTable
+        }
+        .navigationTitle("Projects")
+        .onAppear {
+            refreshDisplay()
+            if let data = UserDefaults.standard.data(forKey: "projectListColumns"),
+               let saved = try? JSONDecoder().decode(TableColumnCustomization<Project>.self, from: data) {
+                columnCustomization = saved
+            }
+        }
+        .onChange(of: store.projects)       { refreshDisplay() }
+        .onChange(of: filterText)           { refreshDisplay() }
+        .onChange(of: filterState)          { refreshDisplay() }
+        .onChange(of: sortOrder)            { refreshDisplay() }
+        .onChange(of: columnCustomization)  { _, new in
+            if let data = try? JSONEncoder().encode(new) {
+                UserDefaults.standard.set(data, forKey: "projectListColumns")
+            }
+        }
+        .toolbar {
+            ToolbarItem {
+                Button("Add Project", systemImage: "plus") {
+                    store.add(Project(name: "New Project"))
+                }
+            }
+        }
+        .alert("Comment required", isPresented: $showCommentAlert, presenting: pendingTarget) { target in
+            TextField("Who / why?", text: $pendingComment)
+            Button("Confirm") {
+                if let newState = pendingState {
+                    store.changeState(of: target.id, to: newState, comment: pendingComment)
+                }
+                resetPending()
+            }
+            Button("Cancel", role: .cancel) { resetPending() }
+        } message: { _ in
+            Text("A comment is required when moving to '\(pendingState?.rawValue ?? "")'.")
+        }
+    }
+
+    // MARK: Subviews
+
+    private var filterBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+            TextField("Filter name  ( -word = NOT,  word|word = OR )", text: $filterText)
+                .textFieldStyle(.plain)
+            Divider().frame(height: 20)
+            Picker("State", selection: $filterState) {
+                Text("All States").tag(StateFilter.all)
+                Divider()
+                ForEach(StateFilter.groups, id: \.self) { g in
+                    Text(g.label)
+                        .fontWeight(.semibold)
+                        .tag(g)
+                }
+                Divider()
+                ForEach(ProjectState.allCases, id: \.self) { s in
+                    Text(s.rawValue).tag(StateFilter.single(s))
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(width: 150)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
+
+    private var projectTable: some View {
+        Table(displayedProjects, sortOrder: $sortOrder, columnCustomization: $columnCustomization) {
+
+            // Folder icon — open folder if set; otherwise prompt to choose one
+            TableColumn("Folder", value: \.folderOrEmpty) { p in
+                Button {
+                    if p.folder != nil {
+                        openFolder(p)
+                    } else if let path = pickFolder() {
+                        store.setFolder(for: p.id, to: path)
+                    }
+                } label: {
+                    Image(systemName: p.folder == nil ? "folder" : "folder.fill")
+                        .foregroundStyle(p.folder == nil ? Color.secondary : Color.blue)
+                }
+                .buttonStyle(.plain)
+            }
+            .width(min: 28, ideal: 28, max: 28)
+            .customizationID("folder")
+
+            // Terminal — only active when a folder is set
+            TableColumn("Terminal", value: \.folderOrEmpty) { p in
+                Button {
+                    openTerminal(p)
+                } label: {
+                    Image(systemName: "terminal.fill")
+                        .foregroundStyle(p.folder == nil ? Color.secondary : Color.primary)
+                }
+                .buttonStyle(.plain)
+                .disabled(p.folder == nil)
+            }
+            .width(min: 28, ideal: 28, max: 28)
+            .customizationID("terminal")
+
+            // URL — open in browser if set; otherwise prompt to enter one
+            TableColumn("URL", value: \.urlOrEmpty) { p in
+                Button {
+                    if let urlString = p.url, let url = URL(string: urlString) {
+                        NSWorkspace.shared.open(url)
+                    } else {
+                        editingURLID = p.id
+                        draftURL     = ""
+                    }
+                } label: {
+                    Image(systemName: p.url == nil ? "safari" : "safari.fill")
+                        .foregroundStyle(p.url == nil ? Color.secondary : Color.accentColor)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: Binding(
+                    get: { editingURLID == p.id },
+                    set: { if !$0 { editingURLID = nil } }
+                )) {
+                    URLEditor(text: $draftURL) {
+                        store.setURL(for: p.id, to: draftURL.isEmpty ? nil : draftURL)
+                        editingURLID = nil
+                        draftURL     = ""
+                    }
+                }
+            }
+            .width(min: 28, ideal: 28, max: 28)
+            .customizationID("url")
+
+            TableColumn("Name", value: \.name) { p in
+                Button(p.name) {
+                    openWindow(id: "project-detail", value: p.id)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.link)
+            }
+            .customizationID("name")
+
+            TableColumn("State", value: \.state) { p in
+                Menu(p.state.rawValue) {
+                    ForEach(ProjectState.allCases, id: \.self) { s in
+                        Button(s.rawValue) { initiateStateChange(for: p, to: s) }
+                    }
+                }
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+            }
+            .width(min: 80, ideal: 100, max: 120)
+            .customizationID("state")
+
+            // Click → date-time popover
+            TableColumn("Next", value: \.nextOrFuture) { p in
+                Button {
+                    editingNextID = p.id
+                    draftNextDate = p.next ?? Date()
+                } label: {
+                    Group {
+                        if let d = p.next { adaptiveDateLabel(for: d) } else { Text("—") }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(p.next == nil ? .tertiary : .primary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(.horizontal, 6)
+                .background(nextBackground(for: p.next))
+                .popover(isPresented: Binding(
+                    get: { editingNextID == p.id },
+                    set: { if !$0 { editingNextID = nil } }
+                )) {
+                    NextEditor(date: $draftNextDate) {
+                        store.setNext(for: p.id, to: draftNextDate)
+                        editingNextID = nil
+                    } onClear: {
+                        store.setNext(for: p.id, to: nil)
+                        editingNextID = nil
+                    }
+                }
+            }
+            .width(min: 120, ideal: 150)
+            .customizationID("next")
+
+            // Click → appends a touch; displays latest datetime
+            TableColumn("Touched", value: \.lastTouched) { p in
+                Button {
+                    store.touch(id: p.id)
+                } label: {
+                    Group {
+                        if let d = p.touched.last { adaptiveDateLabel(for: d) } else { Text("") }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            }
+            .width(min: 120, ideal: 150)
+            .customizationID("touched")
+
+            // Click → note text popover; displays latest note
+            TableColumn("Note", value: \.lastNoteText) { p in
+                Button(p.notes.last?.text ?? "—") {
+                    editingNoteID = p.id
+                    draftNoteText = ""
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(p.notes.isEmpty ? .tertiary : .primary)
+                .lineLimit(1)
+                .popover(isPresented: Binding(
+                    get: { editingNoteID == p.id },
+                    set: { if !$0 { editingNoteID = nil } }
+                )) {
+                    NoteEditor(text: $draftNoteText) {
+                        store.addNote(to: p.id, text: draftNoteText)
+                        editingNoteID = nil
+                        draftNoteText = ""
+                    }
+                }
+            }
+            .customizationID("note")
+        }
+    }
+
+    // MARK: Actions
+
+    private func initiateStateChange(for project: Project, to newState: ProjectState) {
+        if newState.requiresComment {
+            pendingTarget    = project
+            pendingState     = newState
+            showCommentAlert = true
+        } else {
+            store.changeState(of: project.id, to: newState)
+        }
+    }
+
+    // MARK: Adaptive date formatting (Finder-style)
+    // Tries formats longest → shortest; ViewThatFits picks the first one that fits the column width.
+
+    @ViewBuilder
+    private func adaptiveDateLabel(for date: Date) -> some View {
+        let cal  = Calendar.current
+        let time = date.formatted(date: .omitted, time: .shortened)
+        if cal.isDateInToday(date) {
+            ViewThatFits(in: .horizontal) {
+                Text("Today at \(time)")
+                Text("Today, \(time)")
+                Text(time)
+            }
+            .lineLimit(1)
+        } else if cal.isDateInYesterday(date) {
+            ViewThatFits(in: .horizontal) {
+                Text("Yesterday at \(time)")
+                Text("Yesterday")
+            }
+            .lineLimit(1)
+        } else {
+            ViewThatFits(in: .horizontal) {
+                Text(date.formatted(date: .abbreviated, time: .shortened))
+                Text(date.formatted(date: .abbreviated, time: .omitted))
+                Text(date.formatted(date: .numeric,     time: .omitted))
+                Text(date.formatted(.dateTime.month(.twoDigits).day()))
+            }
+            .lineLimit(1)
+        }
+    }
+
+    private func nextBackground(for date: Date?) -> Color {
+        guard let date else { return .clear }
+        let cal = Calendar.current
+        let now = Date()
+        if cal.isDateInToday(date)             { return Color.green.opacity(0.15) }
+        if date < now                          { return Color.red.opacity(0.15) }
+        if date < now.addingTimeInterval(3 * 24 * 3600) { return Color.orange.opacity(0.15) }
+        return .clear
+    }
+
+    private func openURL(_ project: Project) {
+        guard let urlString = project.url, let url = URL(string: urlString) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    private func openFolder(_ project: Project) {
+        guard let path = project.folder else { return }
+        NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
+
+    private func openTerminal(_ project: Project) {
+        guard let path = project.folder else { return }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments     = ["-a", "Terminal", path]
+        try? process.run()
+    }
+
+    private func resetPending() {
+        pendingTarget  = nil
+        pendingState   = nil
+        pendingComment = ""
+    }
+
+    // MARK: Filter logic
+    //
+    // Grammar: terms separated by spaces are AND; groups separated by | are OR.
+    // A term starting with - is negated. Examples:
+    //   "foo bar"   → contains "foo" AND "bar"
+    //   "foo | bar" → contains "foo" OR "bar"
+    //   "-foo"      → does not contain "foo"
+
+    private func nameMatches(_ name: String) -> Bool {
+        let nameLower = name.lowercased()
+        let orGroups  = filterText
+            .components(separatedBy: "|")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        guard !orGroups.isEmpty else { return true }
+        return orGroups.contains { group in
+            group.components(separatedBy: " ")
+                .filter { !$0.isEmpty }
+                .allSatisfy { term in
+                    let t = term.lowercased()
+                    if t.hasPrefix("-"), t.count > 1 {
+                        return !nameLower.contains(String(t.dropFirst()))
+                    }
+                    return nameLower.contains(t)
+                }
+        }
+    }
+}
+
+// MARK: - Inline popover editors
+
+private struct NextEditor: View {
+    @Binding var date: Date
+    let onSet:   () -> Void
+    let onClear: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Set Next").font(.headline)
+            DatePicker("", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                .labelsHidden()
+            HStack {
+                Button("Clear") { onClear() }
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Set") { onSet() }
+                    .keyboardShortcut(.return)
+            }
+        }
+        .padding()
+        .frame(minWidth: 260)
+    }
+}
+
+private struct NoteEditor: View {
+    @Binding var text: String
+    let onAdd: () -> Void
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Add note").font(.headline)
+            TextField("Note", text: $text)
+                .focused($focused)
+                .onSubmit { if !text.isEmpty { onAdd() } }
+            HStack {
+                Spacer()
+                Button("Add") { onAdd() }
+                    .keyboardShortcut(.return)
+                    .disabled(text.isEmpty)
+            }
+        }
+        .padding()
+        .frame(minWidth: 260)
+        .onAppear { focused = true }
+    }
+}
+
+private struct URLEditor: View {
+    @Binding var text: String
+    let onSet: () -> Void
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Set URL").font(.headline)
+            TextField("https://", text: $text)
+                .focused($focused)
+                .onSubmit { if !text.isEmpty { onSet() } }
+            HStack {
+                Spacer()
+                Button("Set") { onSet() }
+                    .keyboardShortcut(.return)
+                    .disabled(text.isEmpty)
+            }
+        }
+        .padding()
+        .frame(minWidth: 300)
+        .onAppear { focused = true }
+    }
+}
