@@ -5,8 +5,8 @@ struct ProjectPropertyView: View {
     @EnvironmentObject var store: ProjectStore
 
     @State private var project: Project
-    @State private var newNoteText    = ""
     @State private var showGoalEditor = false
+    @State private var showNoteEditor = false
 
     init(project: Project) {
         _project = State(initialValue: project)
@@ -27,6 +27,12 @@ struct ProjectPropertyView: View {
         .navigationTitle(project.name)
         .sheet(isPresented: $showGoalEditor) {
             GoalEditorView(goal: $project.goal)
+        }
+        .sheet(isPresented: $showNoteEditor) {
+            NoteInputView { text in
+                project.notes.append(Note(text: text))
+                showNoteEditor = false
+            }
         }
         // Auto-save: every field change is written to the store immediately.
         .onChange(of: project) { _, newValue in
@@ -113,14 +119,7 @@ struct ProjectPropertyView: View {
                     Text(note.text)
                 }
             }
-            HStack {
-                TextField("Add note…", text: $newNoteText)
-                Button("Add") {
-                    project.notes.append(Note(text: newNoteText))
-                    newNoteText = ""
-                }
-                .disabled(newNoteText.isEmpty)
-            }
+            Button("Add note…") { showNoteEditor = true }
         }
     }
 
@@ -149,11 +148,9 @@ struct ProjectPropertyView: View {
             Button("Touch now") {
                 project.touched.append(Date())
             }
-            if let last = project.touched.last {
-                LabeledContent("Last touch") {
-                    Text(last.formatted(date: .abbreviated, time: .shortened))
-                        .foregroundStyle(.secondary)
-                }
+            ForEach(project.touched.reversed(), id: \.self) { date in
+                Text(date.formatted(date: .abbreviated, time: .shortened))
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -197,6 +194,39 @@ struct GoalEditorView: View {
         }
         .frame(minWidth: 420, minHeight: 280)
     }
+}
+
+// MARK: - Folder picker
+
+// MARK: - Note input sheet
+
+struct NoteInputView: View {
+    let onAdd: (String) -> Void
+    @State private var text = ""
+    @Environment(\.dismiss) var dismiss
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Add Note").font(.headline)
+            TextField("Note…", text: $text)
+                .focused($focused)
+                .onSubmit { if !trimmed.isEmpty { onAdd(trimmed) } }
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.escape)
+                Button("Add") { onAdd(trimmed) }
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .disabled(trimmed.isEmpty)
+            }
+        }
+        .padding()
+        .frame(minWidth: 320)
+        .onAppear { focused = true }
+    }
+
+    private var trimmed: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
 // MARK: - Folder picker

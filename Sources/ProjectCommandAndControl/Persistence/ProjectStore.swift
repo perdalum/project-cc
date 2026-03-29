@@ -75,11 +75,17 @@ class ProjectStore: ObservableObject {
 
     /// Appends a LogEntry and updates state + modified timestamp.
     /// `comment` is mandatory when `newState.requiresComment`.
+    /// When a comment is provided it is also mirrored to the Note log.
     func changeState(of id: UUID, to newState: ProjectState, comment: String = "") {
         guard let i = projects.firstIndex(where: { $0.id == id }) else { return }
-        let entry = LogEntry(oldState: projects[i].state, newState: newState, comment: comment)
+        let oldState = projects[i].state
+        let entry = LogEntry(oldState: oldState, newState: newState, comment: comment)
         projects[i].log.append(entry)
         projects[i].state = newState
+        if !comment.isEmpty {
+            let noteText = "State change: \(oldState.rawValue) → \(newState.rawValue): \(comment)"
+            projects[i].notes.append(Note(text: noteText))
+        }
         stampBoth(i)
         save()
     }

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Persistence
+
+- State changes with a required or optional comment now also append a Note entry mirroring the transition and comment text
+
+### Project Property View
+
+- Replaced the inline note input with a dedicated Add Note sheet
+- Touch history now shows the full list of recorded touch timestamps instead of only the latest touch
+
 ## Version 1.3.0 — Legacy Import
 
 ### Utilities
