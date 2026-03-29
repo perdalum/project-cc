@@ -1,5 +1,27 @@
 # Changelog
 
+## Version 1.2.0 — Visual Overview
+
+### Overview View
+
+- **Swift Charts overview**: replaced the placeholder with a graphical activity dashboard built as a per-project swim-lane heatmap
+- **Time range picker**: added `1d | 1w | 1m | 3m | 6m | all`, defaulting to `1w`
+- **Shared filtering**: Overview now uses the same name filter grammar and state filter model as the Project List View
+- **Per-bucket totals**: added summary counts for total touches in each visible hour/day/week/month bucket
+- **Context switching**: added a bottom summary strip counting true project-to-project switches within each bucket based on chronological touch order
+- **Lane highlighting**: clicking a heatmap cell highlights that project lane for easier visual tracing
+- **Empty states**: Overview now distinguishes between “no matching projects” and “no activity in range”
+
+### Project List View
+
+- **Shared filter implementation**: list filtering now uses the same shared helper layer as Overview so both screens stay in sync
+
+### Infrastructure
+
+- Added `OverviewSupport.swift` for shared state filters, text filtering, time ranges, and overview bucketing/aggregation
+- Added `OverviewSupportTests.swift` covering filter grammar, bucket generation, totals, hourly/day/week behavior, and true switch counting
+- Regenerated the Xcode project so the new overview support source and tests are included in app and test targets
+
 ## Version 1.1.0 — List Done
 
 ### Project List View

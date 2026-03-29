@@ -6,54 +6,42 @@ import AppKit
 // NSEvent local monitor sits outside SwiftUI's gesture system, so it never
 // competes with NSTableView's own row-selection machinery.
 
-private final class DoubleClickMonitor: ObservableObject {
-    private var token: Any?
+// @unchecked Sendable: NSEvent monitors always call back on the main thread,
+// so mutating @Published properties from those callbacks is safe.
+private final class DoubleClickMonitor: ObservableObject, @unchecked Sendable {
+    private var doubleClickToken: Any?
+    private var keyToken: Any?
+
+    /// Incremented each time ESC is pressed while the main window is key.
+    @Published var escapeToggle = 0
 
     /// (Re-)registers a new double-click handler, replacing any previous one.
     func register(handler: @escaping @Sendable () -> Void) {
-        unregister()
-        token = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+        if let t = doubleClickToken { NSEvent.removeMonitor(t) }
+        doubleClickToken = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
             if event.clickCount == 2 { handler() }
             return event
         }
     }
 
+    /// Registers a key-down monitor that fires whenever ESC is pressed.
+    /// Returns the event unmodified so sheet/popover cancel buttons still work.
+    func registerKeyHandler() {
+        guard keyToken == nil else { return }
+        keyToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 {   // ESC
+                DispatchQueue.main.async { self?.escapeToggle += 1 }
+            }
+            return event
+        }
+    }
+
     func unregister() {
-        if let t = token { NSEvent.removeMonitor(t); token = nil }
+        if let t = doubleClickToken { NSEvent.removeMonitor(t); doubleClickToken = nil }
+        if let t = keyToken         { NSEvent.removeMonitor(t); keyToken = nil }
     }
 
     deinit { unregister() }
-}
-
-// MARK: - State filter model
-
-enum StateFilter: Hashable {
-    case all
-    case group(String, [ProjectState])
-    case single(ProjectState)
-
-    var label: String {
-        switch self {
-        case .all:               return "All States"
-        case .group(let l, _):  return l
-        case .single(let s):    return s.rawValue
-        }
-    }
-
-    func matches(_ state: ProjectState) -> Bool {
-        switch self {
-        case .all:               return true
-        case .group(_, let ss): return ss.contains(state)
-        case .single(let s):    return state == s
-        }
-    }
-
-    static let groups: [StateFilter] = [
-        .group("Init",     [.new, .idea]),
-        .group("Not Done", [.idea, .new, .active, .delegated, .waiting]),
-        .group("Started",  [.active, .delegated, .waiting]),
-        .group("Done",     [.rejected, .done]),
-    ]
 }
 
 struct ProjectListView: View {
@@ -61,7 +49,7 @@ struct ProjectListView: View {
 
     @State private var filterText  = ""
     @State private var filterState: StateFilter = .all
-    @State private var sortOrder = [KeyPathComparator(\Project.name)]
+    @State private var sortOrder = ProjectFilterSupport.defaultSortOrder
     @State private var columnCustomization = TableColumnCustomization<Project>()
     @State private var selectedIDs: Set<Project.ID> = []
     @StateObject private var clickMonitor = DoubleClickMonitor()
@@ -88,15 +76,22 @@ struct ProjectListView: View {
     @State private var editingURLID:   Project.ID? = nil
     @State private var draftURL:       String      = ""
 
+    // Keyboard / focus
+    @FocusState private var filterFocused: Bool
+    @State private var showNoteForSelection        = false
+    @State private var showStatePickerForSelection = false
+
     // MARK: Derived data
 
     @State private var displayedProjects: [Project] = []
 
     private func refreshDisplay() {
-        displayedProjects = store.projects
-            .filter { filterState.matches($0.state) }
-            .filter { filterText.trimmingCharacters(in: .whitespaces).isEmpty || nameMatches($0.name) }
-            .sorted(using: sortOrder)
+        displayedProjects = ProjectFilterSupport.filteredProjects(
+            store.projects,
+            filterText: filterText,
+            stateFilter: filterState,
+            sortOrder: sortOrder
+        )
     }
 
     // MARK: Body
@@ -115,6 +110,7 @@ struct ProjectListView: View {
                 columnCustomization = saved
             }
             refreshDoubleClickHandler()
+            clickMonitor.registerKeyHandler()
         }
         .onDisappear { clickMonitor.unregister() }
         .onChange(of: store.projects)       { refreshDisplay() }
@@ -122,6 +118,7 @@ struct ProjectListView: View {
         .onChange(of: filterState)          { refreshDisplay() }
         .onChange(of: sortOrder)            { refreshDisplay() }
         .onChange(of: selectedIDs)          { _, _ in refreshDoubleClickHandler() }
+        .onChange(of: clickMonitor.escapeToggle) { _, _ in filterFocused.toggle() }
         .onChange(of: columnCustomization)  { _, new in
             if let data = try? JSONEncoder().encode(new) {
                 UserDefaults.standard.set(data, forKey: "projectListColumns")
@@ -132,6 +129,7 @@ struct ProjectListView: View {
                 Button("Add Project", systemImage: "plus") {
                     store.add(Project(name: "New Project"))
                 }
+                .keyboardShortcut("n", modifiers: .command)
             }
         }
         .alert("Comment required", isPresented: $showCommentAlert) {
@@ -166,6 +164,25 @@ struct ProjectListView: View {
             .padding()
             .frame(minWidth: 280)
         }
+        .sheet(isPresented: $showNoteForSelection) {
+            NoteForSelectionSheet(count: pendingTargetIDs.count, text: $draftNoteText) {
+                pendingTargetIDs.forEach { store.addNote(to: $0, text: draftNoteText) }
+                draftNoteText = ""
+                showNoteForSelection = false
+            } onCancel: {
+                draftNoteText = ""
+                showNoteForSelection = false
+            }
+        }
+        .sheet(isPresented: $showStatePickerForSelection) {
+            StatePickerSheet(count: pendingTargetIDs.count) { state in
+                showStatePickerForSelection = false
+                initiateStateChange(for: pendingTargetIDs, to: state)
+            } onCancel: {
+                showStatePickerForSelection = false
+            }
+        }
+        .overlay(alignment: .topLeading) { keyboardShortcuts }
     }
 
     // MARK: Subviews
@@ -175,6 +192,7 @@ struct ProjectListView: View {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
             TextField("Filter name  ( -word = NOT,  word|word = OR )", text: $filterText)
                 .textFieldStyle(.plain)
+                .focused($filterFocused)
             Divider().frame(height: 20)
             Picker("State", selection: $filterState) {
                 Text("All States").tag(StateFilter.all)
@@ -474,32 +492,42 @@ struct ProjectListView: View {
         pendingComment   = ""
     }
 
-    // MARK: Filter logic
-    //
-    // Grammar: terms separated by spaces are AND; groups separated by | are OR.
-    // A term starting with - is negated. Examples:
-    //   "foo bar"   → contains "foo" AND "bar"
-    //   "foo | bar" → contains "foo" OR "bar"
-    //   "-foo"      → does not contain "foo"
+    private func openSelectedProjects() {
+        for id in selectedIDs { openWindow(id: "project-detail", value: id) }
+    }
 
-    private func nameMatches(_ name: String) -> Bool {
-        let nameLower = name.lowercased()
-        let orGroups  = filterText
-            .components(separatedBy: "|")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-        guard !orGroups.isEmpty else { return true }
-        return orGroups.contains { group in
-            group.components(separatedBy: " ")
-                .filter { !$0.isEmpty }
-                .allSatisfy { term in
-                    let t = term.lowercased()
-                    if t.hasPrefix("-"), t.count > 1 {
-                        return !nameLower.contains(String(t.dropFirst()))
-                    }
-                    return nameLower.contains(t)
-                }
+    /// Zero-size invisible buttons whose sole purpose is registering keyboard shortcuts.
+    private var keyboardShortcuts: some View {
+        HStack(spacing: 0) {
+            // Return — open property view for selected rows (disabled while filter is focused)
+            Button("") { openSelectedProjects() }
+                .keyboardShortcut(.return, modifiers: [])
+                .disabled(selectedIDs.isEmpty || filterFocused)
+            // Cmd+F — focus filter bar
+            Button("") { filterFocused = true }
+                .keyboardShortcut("f", modifiers: .command)
+            // Cmd+T — touch selected
+            Button("") { selectedIDs.forEach { store.touch(id: $0) } }
+                .keyboardShortcut("t", modifiers: .command)
+                .disabled(selectedIDs.isEmpty)
+            // Cmd+M — add note to selected
+            Button("") {
+                pendingTargetIDs = selectedIDs
+                showNoteForSelection = true
+            }
+            .keyboardShortcut("m", modifiers: .command)
+            .disabled(selectedIDs.isEmpty)
+            // Cmd+D — set state for selected
+            Button("") {
+                pendingTargetIDs = selectedIDs
+                showStatePickerForSelection = true
+            }
+            .keyboardShortcut("d", modifiers: .command)
+            .disabled(selectedIDs.isEmpty)
         }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .allowsHitTesting(false)
     }
 }
 
@@ -573,5 +601,59 @@ private struct URLEditor: View {
         .padding()
         .frame(minWidth: 300)
         .onAppear { focused = true }
+    }
+}
+
+private struct NoteForSelectionSheet: View {
+    let count: Int
+    @Binding var text: String
+    let onAdd: () -> Void
+    let onCancel: () -> Void
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Add Note\(count > 1 ? " (\(count) projects)" : "")").font(.headline)
+            TextField("Note…", text: $text)
+                .focused($focused)
+                .onSubmit { if !text.isEmpty { onAdd() } }
+            HStack {
+                Spacer()
+                Button("Cancel", action: onCancel)
+                    .keyboardShortcut(.escape)
+                Button("Add", action: onAdd)
+                    .keyboardShortcut(.return)
+                    .disabled(text.isEmpty)
+            }
+        }
+        .padding()
+        .frame(minWidth: 280)
+        .onAppear { focused = true }
+    }
+}
+
+private struct StatePickerSheet: View {
+    let count: Int
+    let onSelect: (ProjectState) -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Set State\(count > 1 ? " (\(count) projects)" : "")").font(.headline)
+            Divider()
+            ForEach(ProjectState.allCases, id: \.self) { state in
+                Button(state.rawValue) { onSelect(state) }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 2)
+            }
+            Divider()
+            HStack {
+                Spacer()
+                Button("Cancel", action: onCancel)
+                    .keyboardShortcut(.escape)
+            }
+        }
+        .padding()
+        .frame(minWidth: 200)
     }
 }

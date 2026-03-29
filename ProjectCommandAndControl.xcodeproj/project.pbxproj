@@ -16,6 +16,8 @@
 		932B097AD0455D68FFC40F3D /* ProjectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1618846E512E19871FCDD474 /* ProjectTests.swift */; };
 		9B9055E199011984814D1EEA /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = A868C1ABE37E5DF5EE1F9C15 /* Project.swift */; };
 		A65E1723E95F56DF3BD650CD /* ProjectPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125810D0987203C6B324E12 /* ProjectPropertyView.swift */; };
+		BD3E26448E079A7E19D342CF /* OverviewSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA0B10D8ED2015F810F9C6F /* OverviewSupportTests.swift */; };
+		EDEB30107B8735FF1805F2FC /* OverviewSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491BC34C12C87257A6226089 /* OverviewSupport.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +33,7 @@
 /* Begin PBXFileReference section */
 		1618846E512E19871FCDD474 /* ProjectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectTests.swift; sourceTree = "<group>"; };
 		30020E8D9B41384EDB2F62AE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		491BC34C12C87257A6226089 /* OverviewSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewSupport.swift; sourceTree = "<group>"; };
 		5BEEA551210A380C29F77745 /* ProjectCommandAndControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCommandAndControlApp.swift; sourceTree = "<group>"; };
 		62E64B4334D649B54C2165D9 /* ProjectStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectStore.swift; sourceTree = "<group>"; };
 		A868C1ABE37E5DF5EE1F9C15 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
@@ -39,6 +42,7 @@
 		BC6A6DA75FCD57FC27F389F9 /* ProjectCommandAndControlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ProjectCommandAndControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C125810D0987203C6B324E12 /* ProjectPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectPropertyView.swift; sourceTree = "<group>"; };
 		E132588217D472D5B78AB519 /* OverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewView.swift; sourceTree = "<group>"; };
+		EAA0B10D8ED2015F810F9C6F /* OverviewSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewSupportTests.swift; sourceTree = "<group>"; };
 		F7BA5A39F71751AB9E932D0A /* ProjectListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -80,9 +84,11 @@
 		9B3BF716B1568F610DDD2060 /* ProjectCommandAndControlTests */ = {
 			isa = PBXGroup;
 			children = (
+				EAA0B10D8ED2015F810F9C6F /* OverviewSupportTests.swift */,
 				BC4FAFF814D303F068ADC146 /* ProjectStoreTests.swift */,
 				1618846E512E19871FCDD474 /* ProjectTests.swift */,
 			);
+			name = ProjectCommandAndControlTests;
 			path = ProjectCommandAndControlTests;
 			sourceTree = "<group>";
 		};
@@ -116,11 +122,13 @@
 		F524254F03D6E194747F3FC4 /* ProjectCommandAndControl */ = {
 			isa = PBXGroup;
 			children = (
+				491BC34C12C87257A6226089 /* OverviewSupport.swift */,
 				5BEEA551210A380C29F77745 /* ProjectCommandAndControlApp.swift */,
 				0194DC9D69E244515A8C1966 /* Models */,
 				A6330D36B84AEEA9D4577B60 /* Persistence */,
 				C9A9590C0A3974E0E06A3B98 /* Views */,
 			);
+			name = ProjectCommandAndControl;
 			path = ProjectCommandAndControl;
 			sourceTree = "<group>";
 		};
@@ -201,6 +209,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD3E26448E079A7E19D342CF /* OverviewSupportTests.swift in Sources */,
 				3C49FEE402928E25D1101D5D /* ProjectStoreTests.swift in Sources */,
 				932B097AD0455D68FFC40F3D /* ProjectTests.swift in Sources */,
 			);
@@ -211,6 +220,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0770D7EB28B01E35D37BB4AF /* ContentView.swift in Sources */,
+				EDEB30107B8735FF1805F2FC /* OverviewSupport.swift in Sources */,
 				160AD17B7AFBD27B26D0A9FD /* OverviewView.swift in Sources */,
 				9B9055E199011984814D1EEA /* Project.swift in Sources */,
 				39C5672AB84A329081E706BD /* ProjectCommandAndControlApp.swift in Sources */,
@@ -302,10 +312,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 7N9K2H77E8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -379,10 +387,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 7N9K2H77E8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
