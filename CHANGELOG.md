@@ -1,5 +1,33 @@
 # Changelog
 
+## Version 1.1.0 — List Done
+
+### Project List View
+
+- **Column customisation**: drag columns to reorder; right-click header to show/hide; configuration persisted across launches
+- **Folder column**: `folder` / `folder.fill` SF Symbol (blue when set). Click opens folder in Finder; if unset, opens a folder picker with New Folder support
+- **Terminal column**: `terminal.fill` SF Symbol. Click opens folder in Terminal.app; disabled when no folder is set
+- **URL column**: `safari` / `safari.fill` SF Symbol (accent colour when set). Click opens URL in default browser; if unset, prompts for a URL via inline popover
+- **State filter** dropdown with individual states and virtual grouped states (displayed at top, emphasised):
+  - *Init*: New, Idea
+  - *Not Done*: Idea, New, Active, Delegated, Waiting
+  - *Started*: Active, Delegated, Waiting
+  - *Done*: Rejected, Done
+- **Next column background colour** indicates urgency: light green = today, light orange = within 3 days, light red = overdue
+- **Next date picker**: added Clear button to unset the date
+- **Row selection**: click selects row(s); shift-click extends range; command-click toggles individual rows
+- **Double-click on Name** opens the Project Property View window
+- **Context menu** (right-click / Ctrl-click) on selected rows: Touch, Set Next, Clear Next, Set State, Delete
+- **Multi-row state change**: context menu state actions apply to all selected rows; states requiring a comment show a single prompt applied to all
+
+### Data Model
+
+- `ProjectState.requiresComment` now includes `.rejected` (previously only Delegated and Waiting)
+
+### Persistence
+
+- Every mutation (field edit, state change, note, folder, URL, next date, touch) now stamps **both** `modified` and `touched`, giving a complete interaction history
+
 ## Version 1.0.0 — Base Release
 
 ### Data Model

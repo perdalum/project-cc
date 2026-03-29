@@ -52,7 +52,9 @@ class ProjectStore: ObservableObject {
     func update(_ project: Project) {
         guard let i = projects.firstIndex(where: { $0.id == project.id }) else { return }
         var updated = project
-        updated.modified = Date()
+        let now = Date()
+        updated.modified = now
+        updated.touched.append(now)
         projects[i] = updated
         save()
     }
@@ -64,54 +66,60 @@ class ProjectStore: ObservableObject {
 
     // MARK: Domain operations
 
+    /// Stamps both `modified` and `touched` with the current time.
+    private func stampBoth(_ i: Int) {
+        let now = Date()
+        projects[i].modified = now
+        projects[i].touched.append(now)
+    }
+
     /// Appends a LogEntry and updates state + modified timestamp.
     /// `comment` is mandatory when `newState.requiresComment`.
     func changeState(of id: UUID, to newState: ProjectState, comment: String = "") {
         guard let i = projects.firstIndex(where: { $0.id == id }) else { return }
         let entry = LogEntry(oldState: projects[i].state, newState: newState, comment: comment)
         projects[i].log.append(entry)
-        projects[i].state    = newState
-        projects[i].modified = Date()
+        projects[i].state = newState
+        stampBoth(i)
         save()
     }
 
     /// Appends the current timestamp to `touched` and updates `modified`.
     func touch(id: UUID) {
         guard let i = projects.firstIndex(where: { $0.id == id }) else { return }
-        projects[i].touched.append(Date())
-        projects[i].modified = Date()
+        stampBoth(i)
         save()
     }
 
-    /// Sets (or clears) the URL and updates `modified`.
+    /// Sets (or clears) the URL and updates `modified` and `touched`.
     func setURL(for id: Project.ID, to url: String?) {
         guard let i = projects.firstIndex(where: { $0.id == id }) else { return }
-        projects[i].url      = url
-        projects[i].modified = Date()
+        projects[i].url = url
+        stampBoth(i)
         save()
     }
 
-    /// Sets (or clears) the folder path and updates `modified`.
+    /// Sets (or clears) the folder path and updates `modified` and `touched`.
     func setFolder(for id: Project.ID, to path: String?) {
         guard let i = projects.firstIndex(where: { $0.id == id }) else { return }
-        projects[i].folder   = path
-        projects[i].modified = Date()
+        projects[i].folder = path
+        stampBoth(i)
         save()
     }
 
-    /// Sets (or clears) the Next date and updates `modified`.
+    /// Sets (or clears) the Next date and updates `modified` and `touched`.
     func setNext(for id: Project.ID, to date: Date?) {
         guard let i = projects.firstIndex(where: { $0.id == id }) else { return }
-        projects[i].next     = date
-        projects[i].modified = Date()
+        projects[i].next = date
+        stampBoth(i)
         save()
     }
 
-    /// Appends a timestamped note and updates `modified`.
+    /// Appends a timestamped note and updates `modified` and `touched`.
     func addNote(to id: UUID, text: String) {
         guard let i = projects.firstIndex(where: { $0.id == id }) else { return }
         projects[i].notes.append(Note(text: text))
-        projects[i].modified = Date()
+        stampBoth(i)
         save()
     }
 }

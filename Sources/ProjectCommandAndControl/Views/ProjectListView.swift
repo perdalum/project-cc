@@ -1,4 +1,29 @@
 import SwiftUI
+import AppKit
+
+// MARK: - Double-click monitor
+//
+// NSEvent local monitor sits outside SwiftUI's gesture system, so it never
+// competes with NSTableView's own row-selection machinery.
+
+private final class DoubleClickMonitor: ObservableObject {
+    private var token: Any?
+
+    /// (Re-)registers a new double-click handler, replacing any previous one.
+    func register(handler: @escaping @Sendable () -> Void) {
+        unregister()
+        token = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+            if event.clickCount == 2 { handler() }
+            return event
+        }
+    }
+
+    func unregister() {
+        if let t = token { NSEvent.removeMonitor(t); token = nil }
+    }
+
+    deinit { unregister() }
+}
 
 // MARK: - State filter model
 
@@ -38,13 +63,18 @@ struct ProjectListView: View {
     @State private var filterState: StateFilter = .all
     @State private var sortOrder = [KeyPathComparator(\Project.name)]
     @State private var columnCustomization = TableColumnCustomization<Project>()
+    @State private var selectedIDs: Set<Project.ID> = []
+    @StateObject private var clickMonitor = DoubleClickMonitor()
     @Environment(\.openWindow) private var openWindow
 
-    // State-change flow (comment required for Delegated/Waiting)
-    @State private var pendingTarget:   Project?      = nil
-    @State private var pendingState:    ProjectState? = nil
-    @State private var pendingComment   = ""
-    @State private var showCommentAlert = false
+    // State-change flow (comment required for Delegated/Waiting/Rejected)
+    @State private var pendingTargetIDs: Set<Project.ID> = []
+    @State private var pendingState:     ProjectState?   = nil
+    @State private var pendingComment    = ""
+    @State private var showCommentAlert  = false
+
+    // Context-menu "Set Next" for selection
+    @State private var showNextForSelection = false
 
     // Inline Next editor
     @State private var editingNextID:  Project.ID? = nil
@@ -84,11 +114,14 @@ struct ProjectListView: View {
                let saved = try? JSONDecoder().decode(TableColumnCustomization<Project>.self, from: data) {
                 columnCustomization = saved
             }
+            refreshDoubleClickHandler()
         }
+        .onDisappear { clickMonitor.unregister() }
         .onChange(of: store.projects)       { refreshDisplay() }
         .onChange(of: filterText)           { refreshDisplay() }
         .onChange(of: filterState)          { refreshDisplay() }
         .onChange(of: sortOrder)            { refreshDisplay() }
+        .onChange(of: selectedIDs)          { _, _ in refreshDoubleClickHandler() }
         .onChange(of: columnCustomization)  { _, new in
             if let data = try? JSONEncoder().encode(new) {
                 UserDefaults.standard.set(data, forKey: "projectListColumns")
@@ -101,17 +134,37 @@ struct ProjectListView: View {
                 }
             }
         }
-        .alert("Comment required", isPresented: $showCommentAlert, presenting: pendingTarget) { target in
+        .alert("Comment required", isPresented: $showCommentAlert) {
             TextField("Who / why?", text: $pendingComment)
             Button("Confirm") {
                 if let newState = pendingState {
-                    store.changeState(of: target.id, to: newState, comment: pendingComment)
+                    pendingTargetIDs.forEach { store.changeState(of: $0, to: newState, comment: pendingComment) }
                 }
                 resetPending()
             }
             Button("Cancel", role: .cancel) { resetPending() }
-        } message: { _ in
+        } message: {
             Text("A comment is required when moving to '\(pendingState?.rawValue ?? "")'.")
+        }
+        .sheet(isPresented: $showNextForSelection) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Set Next (\(pendingTargetIDs.count) project\(pendingTargetIDs.count == 1 ? "" : "s"))")
+                    .font(.headline)
+                DatePicker("", selection: $draftNextDate, displayedComponents: [.date, .hourAndMinute])
+                    .labelsHidden()
+                HStack {
+                    Spacer()
+                    Button("Cancel") { showNextForSelection = false }
+                        .keyboardShortcut(.escape)
+                    Button("Set") {
+                        pendingTargetIDs.forEach { store.setNext(for: $0, to: draftNextDate) }
+                        showNextForSelection = false
+                    }
+                    .keyboardShortcut(.return)
+                }
+            }
+            .padding()
+            .frame(minWidth: 280)
         }
     }
 
@@ -145,7 +198,7 @@ struct ProjectListView: View {
     }
 
     private var projectTable: some View {
-        Table(displayedProjects, sortOrder: $sortOrder, columnCustomization: $columnCustomization) {
+        Table(displayedProjects, selection: $selectedIDs, sortOrder: $sortOrder, columnCustomization: $columnCustomization) {
 
             // Folder icon — open folder if set; otherwise prompt to choose one
             TableColumn("Folder", value: \.folderOrEmpty) { p in
@@ -188,8 +241,7 @@ struct ProjectListView: View {
                         draftURL     = ""
                     }
                 } label: {
-                    Image(systemName: p.url == nil ? "safari" : "safari.fill")
-                        .foregroundStyle(p.url == nil ? Color.secondary : Color.accentColor)
+                    urlIcon(for: p)
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: Binding(
@@ -207,11 +259,10 @@ struct ProjectListView: View {
             .customizationID("url")
 
             TableColumn("Name", value: \.name) { p in
-                Button(p.name) {
-                    openWindow(id: "project-detail", value: p.id)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.link)
+                let nameColor: Color = selectedIDs.contains(p.id) ? .white : .primary
+                Text(p.name)
+                    .foregroundStyle(nameColor)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .customizationID("name")
 
@@ -233,10 +284,8 @@ struct ProjectListView: View {
                     editingNextID = p.id
                     draftNextDate = p.next ?? Date()
                 } label: {
-                    Group {
-                        if let d = p.next { adaptiveDateLabel(for: d) } else { Text("—") }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    nextLabel(for: p)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(p.next == nil ? .tertiary : .primary)
@@ -264,10 +313,8 @@ struct ProjectListView: View {
                 Button {
                     store.touch(id: p.id)
                 } label: {
-                    Group {
-                        if let d = p.touched.last { adaptiveDateLabel(for: d) } else { Text("") }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    touchedLabel(for: p)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.plain)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -297,18 +344,69 @@ struct ProjectListView: View {
             }
             .customizationID("note")
         }
+        .contextMenu(forSelectionType: Project.ID.self) { ids in
+            selectionContextMenu(for: ids)
+        }
     }
 
     // MARK: Actions
 
+    private func refreshDoubleClickHandler() {
+        let ids    = selectedIDs
+        let action = openWindow
+        clickMonitor.register {
+            for id in ids { action(id: "project-detail", value: id) }
+        }
+    }
+
     private func initiateStateChange(for project: Project, to newState: ProjectState) {
+        initiateStateChange(for: [project.id], to: newState)
+    }
+
+    private func initiateStateChange(for ids: Set<Project.ID>, to newState: ProjectState) {
         if newState.requiresComment {
-            pendingTarget    = project
+            pendingTargetIDs = ids
             pendingState     = newState
             showCommentAlert = true
         } else {
-            store.changeState(of: project.id, to: newState)
+            ids.forEach { store.changeState(of: $0, to: newState) }
         }
+    }
+
+    @ViewBuilder
+    private func selectionContextMenu(for ids: Set<Project.ID>) -> some View {
+        if !ids.isEmpty {
+            Button("Touch") { ids.forEach { store.touch(id: $0) } }
+            Button("Set Next…") {
+                pendingTargetIDs     = ids
+                draftNextDate        = Date()
+                showNextForSelection = true
+            }
+            Button("Clear Next") { ids.forEach { store.setNext(for: $0, to: nil) } }
+            Menu("Set State") {
+                ForEach(ProjectState.allCases, id: \.self) { state in
+                    Button(state.rawValue) { initiateStateChange(for: ids, to: state) }
+                }
+            }
+            Divider()
+            Button("Delete", role: .destructive) { ids.forEach { store.delete(id: $0) } }
+        }
+    }
+
+    private func urlIcon(for project: Project) -> some View {
+        let icon  = project.url == nil ? "safari" : "safari.fill"
+        let color = project.url == nil ? Color.secondary : Color.accentColor
+        return Image(systemName: icon).foregroundStyle(color)
+    }
+
+    @ViewBuilder
+    private func nextLabel(for project: Project) -> some View {
+        if let d = project.next { adaptiveDateLabel(for: d) } else { Text("—") }
+    }
+
+    @ViewBuilder
+    private func touchedLabel(for project: Project) -> some View {
+        if let d = project.touched.last { adaptiveDateLabel(for: d) } else { Text("") }
     }
 
     // MARK: Adaptive date formatting (Finder-style)
@@ -371,9 +469,9 @@ struct ProjectListView: View {
     }
 
     private func resetPending() {
-        pendingTarget  = nil
-        pendingState   = nil
-        pendingComment = ""
+        pendingTargetIDs = []
+        pendingState     = nil
+        pendingComment   = ""
     }
 
     // MARK: Filter logic
