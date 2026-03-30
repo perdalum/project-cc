@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 1.3.1
+
+### Packaging
+
+- Updated the app bundle version metadata shown in About to `1.3.0 (3)`
+- Regenerated the Xcode project so the bundle version settings match the generated project file
+
+### Documentation
+
+- Added an MIT `LICENSE`
+- Updated `tasklist.md` to reflect completed dissemination and Settings work
+
 ## Version 1.3.0 — First Release
 
 ### Settings

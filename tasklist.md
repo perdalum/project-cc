@@ -78,7 +78,7 @@ Visualizations
 
 Setup
 
-- [ ] Add a Settings view (standard macOS settings) with the following settings: Persistent storage folder for the JSON file.
+- [x] Add a Settings view (standard macOS settings) with the following settings: Persistent storage folder for the JSON file.
 
 
 
@@ -98,7 +98,7 @@ New Views
 
 ## Dissimination
 
-- [ ] write a good README
-- [ ] add license
+- [x] write a good README
+- [x] add license
 - [ ] write a blog post for website
-- [ ] make mock data
+- [x] make mock data
