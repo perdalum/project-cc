@@ -5,7 +5,7 @@ import Testing
 // Swift Testing creates a fresh suite instance per @Test, so init()/deinit act
 // as setUp/tearDown. Using a struct means a new tempURL + store for every test.
 
-@Suite struct ProjectStoreTests {
+@MainActor @Suite struct ProjectStoreTests {
     let store:   ProjectStore
     let tempURL: URL
 
@@ -83,6 +83,33 @@ import Testing
         store.add(Project(name: "C", category: "Family"))
         let store2 = ProjectStore(fileURL: tempURL)
         #expect(store2.projects.count == 3)
+    }
+
+    @Test func switchToFileLoadsProjectsFromNewLocation() {
+        store.add(Project(name: "Original"))
+
+        let otherURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(UUID().uuidString).json")
+        let otherStore = ProjectStore(fileURL: otherURL)
+        otherStore.add(Project(name: "Replacement"))
+
+        store.switchToFile(otherURL)
+
+        #expect(store.fileURL == otherURL)
+        #expect(store.projects.count == 1)
+        #expect(store.projects[0].name == "Replacement")
+    }
+
+    @Test func switchToMissingFileClearsProjects() {
+        store.add(Project(name: "Original"))
+
+        let missingURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("missing_\(UUID().uuidString).json")
+
+        store.switchToFile(missingURL)
+
+        #expect(store.fileURL == missingURL)
+        #expect(store.projects.isEmpty)
     }
 
     // MARK: Domain operations

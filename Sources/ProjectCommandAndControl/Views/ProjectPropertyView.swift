@@ -232,6 +232,7 @@ struct NoteInputView: View {
 // MARK: - Folder picker
 
 /// Shows a macOS open-panel restricted to directories. Returns the chosen path, or nil if cancelled.
+@MainActor
 func pickFolder() -> String? {
     let panel = NSOpenPanel()
     panel.canChooseFiles          = false

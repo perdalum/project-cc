@@ -1,15 +1,33 @@
 # Changelog
 
-## Unreleased
+## Version 1.3.0 — First Release
+
+### Settings
+
+- Added a standard macOS Settings window
+- Added configurable persistent storage file selection using the native macOS file picker
+- Added the standard app-menu Settings entry with `Command-,`
 
 ### Persistence
 
 - State changes with a required or optional comment now also append a Note entry mirroring the transition and comment text
+- `ProjectStore` now follows the configured persistent storage file and reloads immediately when the storage path changes
 
 ### Project Property View
 
 - Replaced the inline note input with a dedicated Add Note sheet
 - Touch history now shows the full list of recorded touch timestamps instead of only the latest touch
+
+### Documentation
+
+- Added a repository `README.md` with product overview, screenshots, build instructions, and development notes
+- Added publication-safe `mock-projects.json` demo data
+
+### Infrastructure
+
+- Added `AppSettings.swift` and `SettingsView.swift`
+- Added store coverage for switching persistence files at runtime
+- Regenerated the Xcode project to include the new Settings-related source files
 
 ## Version 1.3.0 — Legacy Import
 

@@ -3,19 +3,29 @@ import Combine
 
 /// Owns the canonical in-memory project list and is the single writer to disk.
 /// Every mutating operation saves immediately.
+@MainActor
 class ProjectStore: ObservableObject {
     @Published var projects: [Project] = []
 
-    let fileURL: URL
+    @Published private(set) var fileURL: URL
+    private var cancellables: Set<AnyCancellable> = []
 
     // MARK: Init
 
     /// Production init: ~/Documents/ProjectCommandAndControl/projects.json
     convenience init() {
-        let docs   = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let folder = docs.appendingPathComponent("ProjectCommandAndControl")
-        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        self.init(fileURL: folder.appendingPathComponent("projects.json"))
+        self.init(fileURL: AppSettings.defaultPersistentStorageURL)
+    }
+
+    convenience init(settings: AppSettings) {
+        self.init(fileURL: settings.persistentStorageURL)
+        settings.$persistentStoragePath
+            .removeDuplicates()
+            .sink { [weak self, weak settings] _ in
+                guard let self, let settings else { return }
+                self.switchToFile(settings.persistentStorageURL)
+            }
+            .store(in: &cancellables)
     }
 
     /// Testable init: pass any file URL.
@@ -27,19 +37,37 @@ class ProjectStore: ObservableObject {
     // MARK: Persistence
 
     func load() {
-        guard let data = try? Data(contentsOf: fileURL) else { return }
+        guard let data = try? Data(contentsOf: fileURL) else {
+            projects = []
+            return
+        }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        guard let loaded = try? decoder.decode([Project].self, from: data) else { return }
+        guard let loaded = try? decoder.decode([Project].self, from: data) else {
+            projects = []
+            return
+        }
         projects = loaded
     }
 
     func save() {
+        prepareParentDirectory()
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy  = .iso8601
         encoder.outputFormatting      = .prettyPrinted
         guard let data = try? encoder.encode(projects) else { return }
         try? data.write(to: fileURL, options: .atomic)
+    }
+
+    func switchToFile(_ url: URL) {
+        guard fileURL != url else { return }
+        fileURL = url
+        load()
+    }
+
+    private func prepareParentDirectory() {
+        let folder = fileURL.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     }
 
     // MARK: CRUD

@@ -1,0 +1,524 @@
+[
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a1111",
+    "created": "2025-11-18T09:10:00Z",
+    "name": "Aurora Ledger",
+    "category": "Finance Ops",
+    "projectType": "Classical Project",
+    "state": "Active",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050001",
+        "date": "2025-11-19T13:20:00Z",
+        "oldState": "New",
+        "newState": "Active",
+        "comment": "Moved into implementation after stakeholder review."
+      }
+    ],
+    "start": "2025-11-20T08:00:00Z",
+    "end": null,
+    "modified": "2026-03-29T14:48:00Z",
+    "folder": "/Users/demo/Projects/aurora-ledger",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050011",
+        "date": "2025-11-18T09:30:00Z",
+        "text": "Initial framing session."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050012",
+        "date": "2026-01-12T10:05:00Z",
+        "text": "Ledger import path needs a second pass because the reconciliation rules become fragile when vendors reuse external invoice references."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050013",
+        "date": "2026-03-27T16:22:00Z",
+        "text": "Good momentum. Remaining work is mostly cleanup, reporting labels, and publishing the handover guide."
+      }
+    ],
+    "touched": [
+      "2026-03-03T08:12:00Z",
+      "2026-03-07T11:25:00Z",
+      "2026-03-12T15:44:00Z",
+      "2026-03-17T09:05:00Z",
+      "2026-03-21T14:16:00Z",
+      "2026-03-27T16:22:00Z",
+      "2026-03-29T14:48:00Z"
+    ],
+    "latestReview": "2026-03-21T09:00:00Z",
+    "next": "2026-04-02T08:30:00Z",
+    "url": "https://example.com/aurora-ledger",
+    "goal": "Ship a finance operations dashboard that turns weekly reconciliation into a same-day workflow."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a2222",
+    "created": "2026-02-04T08:15:00Z",
+    "name": "Signal Garden",
+    "category": "Research",
+    "projectType": "Area of Responsibility",
+    "state": "Idea",
+    "log": [],
+    "start": null,
+    "end": null,
+    "modified": "2026-03-24T12:11:00Z",
+    "folder": "/Users/demo/Areas/signal-garden",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050021",
+        "date": "2026-02-04T08:20:00Z",
+        "text": "Keep this loose."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050022",
+        "date": "2026-03-01T19:10:00Z",
+        "text": "Potential umbrella for experiments around ambient signals, low-friction journaling, and lightweight project telemetry."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050023",
+        "date": "2026-03-24T12:11:00Z",
+        "text": "Interesting, but not yet a commitment."
+      }
+    ],
+    "touched": [
+      "2026-02-04T08:20:00Z",
+      "2026-03-01T19:10:00Z",
+      "2026-03-24T12:11:00Z"
+    ],
+    "latestReview": "2026-03-24T12:00:00Z",
+    "next": "2026-04-18T10:00:00Z",
+    "url": null,
+    "goal": "Collect promising ideas without forcing them into delivery mode too early."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a3333",
+    "created": "2026-01-10T07:40:00Z",
+    "name": "Northwind Archive",
+    "category": "Operations",
+    "projectType": "Classical Project",
+    "state": "Waiting",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050031",
+        "date": "2026-01-13T09:00:00Z",
+        "oldState": "New",
+        "newState": "Active",
+        "comment": "Archive scope approved."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050032",
+        "date": "2026-03-05T14:05:00Z",
+        "oldState": "Active",
+        "newState": "Waiting",
+        "comment": "Waiting for legal sign-off on document retention wording."
+      }
+    ],
+    "start": "2026-01-15T08:00:00Z",
+    "end": null,
+    "modified": "2026-03-25T15:20:00Z",
+    "folder": "/Users/demo/Projects/northwind-archive",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050033",
+        "date": "2026-01-10T08:10:00Z",
+        "text": "Need a defensible naming convention before migration starts."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050034",
+        "date": "2026-02-17T13:48:00Z",
+        "text": "The archive itself is simple; the hard part is preserving trust while changing a workflow people barely tolerate already."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050035",
+        "date": "2026-03-25T15:20:00Z",
+        "text": "Chased counsel again."
+      }
+    ],
+    "touched": [
+      "2026-01-10T08:10:00Z",
+      "2026-01-13T09:00:00Z",
+      "2026-02-02T10:12:00Z",
+      "2026-02-17T13:48:00Z",
+      "2026-03-05T14:05:00Z",
+      "2026-03-12T09:30:00Z",
+      "2026-03-25T15:20:00Z"
+    ],
+    "latestReview": "2026-03-12T09:00:00Z",
+    "next": "2026-03-31T11:00:00Z",
+    "url": "https://example.com/northwind-archive",
+    "goal": "Consolidate scattered documents into one archive with clear retention and retrieval rules."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a4444",
+    "created": "2025-12-01T11:00:00Z",
+    "name": "Cinder Atlas",
+    "category": "Strategy",
+    "projectType": "Area of Responsibility",
+    "state": "Delegated",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050041",
+        "date": "2025-12-02T09:10:00Z",
+        "oldState": "New",
+        "newState": "Active",
+        "comment": "Kicked off with the planning group."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050042",
+        "date": "2026-02-19T16:40:00Z",
+        "oldState": "Active",
+        "newState": "Delegated",
+        "comment": "Delegated landscape mapping to the external facilitation team."
+      }
+    ],
+    "start": "2025-12-03T09:00:00Z",
+    "end": null,
+    "modified": "2026-03-18T10:32:00Z",
+    "folder": "/Users/demo/Areas/cinder-atlas",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050043",
+        "date": "2025-12-01T11:30:00Z",
+        "text": "Useful name, still vague scope."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050044",
+        "date": "2026-01-21T14:22:00Z",
+        "text": "The atlas concept resonates because it gives leadership a map rather than a mandate. Need examples, not slogans."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050045",
+        "date": "2026-03-18T10:32:00Z",
+        "text": "Vendor is late but still within tolerance."
+      }
+    ],
+    "touched": [
+      "2025-12-01T11:30:00Z",
+      "2025-12-18T09:40:00Z",
+      "2026-01-21T14:22:00Z",
+      "2026-02-19T16:40:00Z",
+      "2026-03-18T10:32:00Z"
+    ],
+    "latestReview": "2026-03-18T09:45:00Z",
+    "next": "2026-04-10T13:00:00Z",
+    "url": null,
+    "goal": "Maintain a live strategic map of initiatives, dependencies, and ownership across the organization."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a5555",
+    "created": "2026-03-02T09:05:00Z",
+    "name": "Velvet Circuit",
+    "category": "Product",
+    "projectType": "Classical Project",
+    "state": "New",
+    "log": [],
+    "start": null,
+    "end": null,
+    "modified": "2026-03-29T08:55:00Z",
+    "folder": "/Users/demo/Projects/velvet-circuit",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050051",
+        "date": "2026-03-02T09:15:00Z",
+        "text": "Promising name."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050052",
+        "date": "2026-03-14T17:42:00Z",
+        "text": "Prototype concept for a calmer onboarding flow that feels more like guided setup than an account-registration treadmill."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050053",
+        "date": "2026-03-29T08:55:00Z",
+        "text": "Need to decide whether this belongs in the next planning cycle or should stay parked."
+      }
+    ],
+    "touched": [
+      "2026-03-02T09:15:00Z",
+      "2026-03-09T16:20:00Z",
+      "2026-03-14T17:42:00Z",
+      "2026-03-29T08:55:00Z"
+    ],
+    "latestReview": null,
+    "next": "2026-04-06T09:00:00Z",
+    "url": "https://example.com/velvet-circuit",
+    "goal": "Prepare a product concept that makes first-run setup feel elegant instead of bureaucratic."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a6666",
+    "created": "2025-10-07T06:50:00Z",
+    "name": "Marble Current",
+    "category": "Infrastructure",
+    "projectType": "Area of Responsibility",
+    "state": "Done",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050061",
+        "date": "2025-10-09T08:45:00Z",
+        "oldState": "New",
+        "newState": "Active",
+        "comment": "Started migration prep."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050062",
+        "date": "2026-02-28T15:10:00Z",
+        "oldState": "Active",
+        "newState": "Done",
+        "comment": "Completed the service rollover and verification checklist."
+      }
+    ],
+    "start": "2025-10-10T07:30:00Z",
+    "end": "2026-02-28T15:10:00Z",
+    "modified": "2026-02-28T15:10:00Z",
+    "folder": "/Users/demo/Areas/marble-current",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050063",
+        "date": "2025-10-07T07:10:00Z",
+        "text": "Migration candidate."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050064",
+        "date": "2026-01-08T11:58:00Z",
+        "text": "Most of the work is careful sequencing: who gets moved first, what must remain stable, and which dashboards are trustworthy enough to use as cutover signals."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050065",
+        "date": "2026-02-28T15:10:00Z",
+        "text": "Closed cleanly."
+      }
+    ],
+    "touched": [
+      "2025-10-07T07:10:00Z",
+      "2025-11-04T09:00:00Z",
+      "2025-12-16T13:35:00Z",
+      "2026-01-08T11:58:00Z",
+      "2026-02-03T10:17:00Z",
+      "2026-02-28T15:10:00Z"
+    ],
+    "latestReview": "2026-02-28T14:00:00Z",
+    "next": null,
+    "url": null,
+    "goal": "Keep the core service migration boring, observable, and irreversible only after verification."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a7777",
+    "created": "2025-09-15T10:45:00Z",
+    "name": "Paper Harbor",
+    "category": "Admin",
+    "projectType": "Classical Project",
+    "state": "Rejected",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050071",
+        "date": "2025-09-17T09:05:00Z",
+        "oldState": "Idea",
+        "newState": "New",
+        "comment": "Worth evaluating."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050072",
+        "date": "2025-10-01T16:25:00Z",
+        "oldState": "New",
+        "newState": "Rejected",
+        "comment": "Rejected because it duplicates an existing service and adds maintenance cost."
+      }
+    ],
+    "start": null,
+    "end": "2025-10-01T16:25:00Z",
+    "modified": "2025-10-01T16:25:00Z",
+    "folder": "/Users/demo/Projects/paper-harbor",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050073",
+        "date": "2025-09-15T11:05:00Z",
+        "text": "Small admin experiment."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050074",
+        "date": "2025-09-25T13:14:00Z",
+        "text": "The proposed workflow is tidy on paper but does not solve a painful enough problem to justify owning it long term."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050075",
+        "date": "2025-10-01T16:25:00Z",
+        "text": "Closed and archived."
+      }
+    ],
+    "touched": [
+      "2025-09-15T11:05:00Z",
+      "2025-09-17T09:05:00Z",
+      "2025-09-25T13:14:00Z",
+      "2025-10-01T16:25:00Z"
+    ],
+    "latestReview": "2025-10-01T15:30:00Z",
+    "next": null,
+    "url": null,
+    "goal": "Reduce paperwork churn for recurring admin requests."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a8888",
+    "created": "2026-01-22T12:00:00Z",
+    "name": "Obsidian Kite",
+    "category": "Partnerships",
+    "projectType": "Classical Project",
+    "state": "Active",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050081",
+        "date": "2026-01-23T09:20:00Z",
+        "oldState": "New",
+        "newState": "Active",
+        "comment": "Started partner outreach."
+      }
+    ],
+    "start": "2026-01-23T09:20:00Z",
+    "end": null,
+    "modified": "2026-03-30T07:40:00Z",
+    "folder": "/Users/demo/Projects/obsidian-kite",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050082",
+        "date": "2026-01-22T12:18:00Z",
+        "text": "Needs sharper outreach list."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050083",
+        "date": "2026-02-20T10:41:00Z",
+        "text": "Two strong conversations this week. The framing works best when we lead with joint outcomes instead of features."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050084",
+        "date": "2026-03-30T07:40:00Z",
+        "text": "Prepare follow-up deck before the Thursday call."
+      }
+    ],
+    "touched": [
+      "2026-01-22T12:18:00Z",
+      "2026-01-23T09:20:00Z",
+      "2026-02-06T08:44:00Z",
+      "2026-02-20T10:41:00Z",
+      "2026-03-11T16:08:00Z",
+      "2026-03-24T09:55:00Z",
+      "2026-03-30T07:40:00Z"
+    ],
+    "latestReview": "2026-03-24T09:30:00Z",
+    "next": "2026-03-30T13:00:00Z",
+    "url": "https://example.com/obsidian-kite",
+    "goal": "Build a partner program that produces a few strong collaborations rather than a long list of weak ones."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89a9999",
+    "created": "2025-12-11T08:30:00Z",
+    "name": "Lantern Mosaic",
+    "category": "People Systems",
+    "projectType": "Area of Responsibility",
+    "state": "Done",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050091",
+        "date": "2025-12-12T10:00:00Z",
+        "oldState": "New",
+        "newState": "Active",
+        "comment": "Started handbook refresh."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050092",
+        "date": "2026-03-14T12:35:00Z",
+        "oldState": "Active",
+        "newState": "Done",
+        "comment": "Published the final handbook set and closed the review loop."
+      }
+    ],
+    "start": "2025-12-12T10:00:00Z",
+    "end": "2026-03-14T12:35:00Z",
+    "modified": "2026-03-14T12:35:00Z",
+    "folder": "/Users/demo/Areas/lantern-mosaic",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050093",
+        "date": "2025-12-11T08:45:00Z",
+        "text": "Make the handbook easier to navigate."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050094",
+        "date": "2026-02-04T15:02:00Z",
+        "text": "People do not want more policy; they want fewer dead ends. Every section should answer a real question in plain language."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e09050095",
+        "date": "2026-03-14T12:35:00Z",
+        "text": "Released."
+      }
+    ],
+    "touched": [
+      "2025-12-11T08:45:00Z",
+      "2025-12-12T10:00:00Z",
+      "2026-01-09T09:20:00Z",
+      "2026-02-04T15:02:00Z",
+      "2026-02-26T11:10:00Z",
+      "2026-03-14T12:35:00Z"
+    ],
+    "latestReview": "2026-03-13T16:00:00Z",
+    "next": null,
+    "url": null,
+    "goal": "Maintain a handbook system that answers real operational questions quickly."
+  },
+  {
+    "id": "f64a55c0-8704-4e44-b590-3f1aa89ababa",
+    "created": "2026-02-14T07:25:00Z",
+    "name": "Crimson Orchard",
+    "category": "Client Delivery",
+    "projectType": "Classical Project",
+    "state": "Waiting",
+    "log": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e090500a1",
+        "date": "2026-02-15T08:00:00Z",
+        "oldState": "New",
+        "newState": "Active",
+        "comment": "Started delivery prep."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e090500a2",
+        "date": "2026-03-26T13:12:00Z",
+        "oldState": "Active",
+        "newState": "Waiting",
+        "comment": "Waiting for client approval on the revised rollout plan."
+      }
+    ],
+    "start": "2026-02-15T08:00:00Z",
+    "end": null,
+    "modified": "2026-03-29T17:05:00Z",
+    "folder": "/Users/demo/Projects/crimson-orchard",
+    "notes": [
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e090500a3",
+        "date": "2026-02-14T07:40:00Z",
+        "text": "Strong client, tight timeline."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e090500a4",
+        "date": "2026-03-03T18:25:00Z",
+        "text": "The rollout can still land on time if we keep scope disciplined and avoid letting reporting extras sneak into the core package."
+      },
+      {
+        "id": "4c4dfc3f-1d0b-45c2-bf10-2f0e090500a5",
+        "date": "2026-03-29T17:05:00Z",
+        "text": "Prepared fallback plan in case approval slips another week."
+      }
+    ],
+    "touched": [
+      "2026-02-14T07:40:00Z",
+      "2026-02-15T08:00:00Z",
+      "2026-02-28T11:15:00Z",
+      "2026-03-03T18:25:00Z",
+      "2026-03-12T10:48:00Z",
+      "2026-03-26T13:12:00Z",
+      "2026-03-29T17:05:00Z"
+    ],
+    "latestReview": "2026-03-26T12:45:00Z",
+    "next": "2026-04-01T09:30:00Z",
+    "url": "https://example.com/crimson-orchard",
+    "goal": "Deliver a polished client rollout with clear checkpoints and no surprise scope expansion."
+  }
+]
