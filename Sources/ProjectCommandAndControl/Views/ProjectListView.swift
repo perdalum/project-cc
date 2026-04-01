@@ -80,6 +80,7 @@ struct ProjectListView: View {
     @FocusState private var filterFocused: Bool
     @State private var showNoteForSelection        = false
     @State private var showStatePickerForSelection = false
+    @State private var showNewProjectSheet         = false
 
     // MARK: Derived data
 
@@ -127,9 +128,25 @@ struct ProjectListView: View {
         .toolbar {
             ToolbarItem {
                 Button("Add Project", systemImage: "plus") {
-                    store.add(Project(name: "New Project"))
+                    showNewProjectSheet = true
                 }
                 .keyboardShortcut("n", modifiers: .command)
+            }
+        }
+        .sheet(isPresented: $showNewProjectSheet) {
+            NewProjectSheet { name, category, projectType, start, end in
+                var project = Project(
+                    name: name,
+                    category: category,
+                    projectType: projectType
+                )
+                project.start = start
+                project.end = end
+                store.add(project)
+                selectedIDs = [project.id]
+                showNewProjectSheet = false
+            } onCancel: {
+                showNewProjectSheet = false
             }
         }
         .alert("Comment required", isPresented: $showCommentAlert) {
@@ -601,6 +618,83 @@ private struct URLEditor: View {
         .padding()
         .frame(minWidth: 300)
         .onAppear { focused = true }
+    }
+}
+
+private struct NewProjectSheet: View {
+    let onCreate: (String, String, ProjectType, Date?, Date?) -> Void
+    let onCancel: () -> Void
+
+    @State private var name = ""
+    @State private var category = ""
+    @State private var projectType: ProjectType = .classical
+    @State private var includeStart = false
+    @State private var start = Date()
+    @State private var includeEnd = false
+    @State private var end = Date()
+
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("New Project").font(.headline)
+
+            TextField("Project name", text: $name)
+                .focused($focused)
+                .onSubmit {
+                    if !trimmedName.isEmpty {
+                        onCreate(trimmedName, trimmedCategory, projectType, resolvedStart, resolvedEnd)
+                    }
+                }
+
+            TextField("Category", text: $category)
+
+            Picker("Type", selection: $projectType) {
+                ForEach(ProjectType.allCases, id: \.self) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+
+            Toggle("Set Start", isOn: $includeStart)
+            if includeStart {
+                DatePicker("Start", selection: $start, displayedComponents: [.date, .hourAndMinute])
+            }
+
+            Toggle("Set End", isOn: $includeEnd)
+            if includeEnd {
+                DatePicker("End", selection: $end, displayedComponents: [.date, .hourAndMinute])
+            }
+
+            HStack {
+                Spacer()
+                Button("Cancel", action: onCancel)
+                    .keyboardShortcut(.escape)
+                Button("Create") {
+                    onCreate(trimmedName, trimmedCategory, projectType, resolvedStart, resolvedEnd)
+                }
+                    .keyboardShortcut(.return)
+                    .disabled(trimmedName.isEmpty)
+            }
+        }
+        .padding()
+        .frame(minWidth: 360)
+        .onAppear { focused = true }
+    }
+
+    private var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedCategory: String {
+        category.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var resolvedStart: Date? {
+        includeStart ? start : nil
+    }
+
+    private var resolvedEnd: Date? {
+        includeEnd ? end : nil
     }
 }
 
