@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.3.2
+
+### Project List View
+
+- Changed the toolbar `+` action to create a placeholder project and immediately open its Project Property window so full metadata can be entered there
+- Fixed double-click handling so double-clicking inside the Filter field no longer opens the selected project and instead behaves like a normal text field selection gesture
+
 ## Version 1.3.1
 
 ### Packaging
